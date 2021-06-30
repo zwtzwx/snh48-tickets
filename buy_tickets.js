@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         shop.snh48
-// @namespace    http://tampermonkey.net/
-// @version      0.1
+// @name         snh48 tickets
+// @namespace    https://github.com/zwtzwx/snh48-tickets
+// @version      0.2
 // @description  snh48
 // @author       zwtzwx
 // @match        https://shop.48.cn/tickets/item/*
