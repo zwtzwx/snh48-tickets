@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         snh48 tickets
 // @namespace    https://github.com/zwtzwx/snh48-tickets
-// @version      0.2
+// @version      0.3
 // @description  snh48
 // @author       zwtzwx
 // @match        https://shop.48.cn/tickets/item/*
@@ -13,6 +13,95 @@
 $(window).load(function(){
   var loading = false;
   var loadingObj;
+
+  function countDown() {
+    var sys_second = 600;
+    var minute_elem = $('.colockbox').find('.minute');
+    var second_elem = $('.colockbox').find('.second');
+    var timer = setInterval(function() {
+      if (sys_second > 1) {
+        sys_second -= 1;
+        var minute = Math.floor((sys_second / 60) % 60);
+        var second = Math.floor(sys_second % 60);
+        $(minute_elem).text(minute < 10 ? "0" + minute : minute); //计算分钟
+        $(second_elem).text(second < 10 ? "0" + second : second); //计算秒杀
+      } else {
+        layer.closeAll();
+        clearInterval(timer);
+      }
+    },
+    1000);
+  }
+
+  var delay = 2000;
+
+  function loop(id) {
+    layer.msg('提交中.....');
+    setTimeout(function() {
+      tickets(id);
+    }, delay);
+  }
+
+  function tickets(id) {
+    var _url = "/TOrder/tickCheck";
+    $.ajax({
+      url: _url,
+      type: 'GET',
+      dataType: 'json',
+      data: {
+        id,
+        r: Math.random()
+      },
+      success(result) {
+        if (result.HasError) {
+          $('.title_g1').html(result.Message);
+          layer.closeAll();
+          layer.msg("操作失败",
+            {
+              type: 1,
+              skin: '', //样式类名
+              closeBtn: 0, //不显示关闭按钮
+              shift: 2,
+              shade: [0.8, "#000000"],
+              content: $('#info5'),
+              time: 0
+          });
+          loop(id);
+        } else {
+          switch (result.ErrorCode) {
+            case"wait":
+              setTimeout(function() {
+                tickets(id)
+              }, 5000);
+              break;
+            case"fail":
+              //失败操作
+              $('.title_g1').html(result.Message);
+              layer.closeAll();
+              layer.msg("抢票失败",
+                {
+                  type: 1,
+                  skin: '',
+                  closeBtn: 0,
+                  shift: 2,
+                  shade: [0.8, "#000000"],
+                  content: $('#info5'),
+                  time: 10000
+                });
+                break;
+            case"success":
+              window.location.href = result.ReturnObject;
+              break;
+          }
+        }
+      },
+      error() {
+        layer.closeAll();
+        layer.msg("您排队失败，请刷新重试");
+      }
+    })
+  }
+
   // 购票
   function buy() {
     var _url = "/TOrder/add";
@@ -52,24 +141,30 @@ $(window).load(function(){
         layer.close(loadingObj);
         if (result.HasError) {
             //失败操作
-             layer.msg(result.Message + "<br/>错误代码:" + result.ErrorCode, {
-                 icon: 2,
-                 time: 5000 //2秒关闭（如果不配置，默认是3秒）
+            layer.msg(result.Message, {
+              icon: 2,
+              time: 2000
              }, function () {
-                 //do something
-                 if (result.ErrorCode == "161004") {
-                     window.location.href = "/TOrder/Index";
-                 }
+              if (result.ErrorCode == "161004") {
+                window.location.href = "/TOrder/Index";
+              }
             });
             console.error("提交失败")
-            buy();
         } else {
             if (result.ReturnObject != "choose_tickets") {
               //成功操作
-                layer.alert('购买成功，快去付款吧！', {
-                    skin: 'layui-layer-molv',
-                    closeBtn: 0
-                })
+              layer.alert(result.Message, {
+                skin: 'layui-layer-molv',
+                closeBtn: 0,
+                content: $('#info4'),
+                time: 0
+              })
+              if (result.Message == "success") {
+                window.location.href = result.ReturnObject;
+              } else {
+                countDown();
+                loop(_id);
+              }
             } else {
               layer.msg("提交成功，等待管理员抽选");
             }
