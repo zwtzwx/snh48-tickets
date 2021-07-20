@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         snh48 tickets
 // @namespace    https://github.com/zwtzwx/snh48-tickets
-// @version      0.3
+// @version      0.4
 // @description  snh48
 // @author       zwtzwx
 // @match        https://shop.48.cn/tickets/item/*
@@ -90,7 +90,15 @@ $(window).load(function(){
                 });
                 break;
             case"success":
-              window.location.href = result.ReturnObject;
+              layer.close(loadingObj);
+              layer.alert('抢票成功', {
+                skin: 'layui-layer-molv',
+                closeBtn: 0,
+                content: '即将跳转订单页面...',
+                time: 2000
+              }, function() {
+                window.location.href = result.ReturnObject;
+              })
               break;
           }
         }
@@ -138,7 +146,7 @@ $(window).load(function(){
         choose_times_end: _choose_times_end
       },
       success: function(result) {
-        layer.close(loadingObj);
+        // layer.close(loadingObj);
         if (result.HasError) {
             //失败操作
             layer.msg(result.Message, {
@@ -153,14 +161,16 @@ $(window).load(function(){
         } else {
             if (result.ReturnObject != "choose_tickets") {
               //成功操作
-              layer.alert(result.Message, {
-                skin: 'layui-layer-molv',
-                closeBtn: 0,
-                content: $('#info4'),
-                time: 0
-              })
               if (result.Message == "success") {
-                window.location.href = result.ReturnObject;
+                layer.close(loadingObj);
+                layer.alert('抢票成功', {
+                  skin: 'layui-layer-molv',
+                  closeBtn: 0,
+                  content: '即将跳转订单页面...',
+                  time: 2000
+                }, function() {
+                  window.location.href = result.ReturnObject;
+                })
               } else {
                 countDown();
                 loop(_id);
@@ -195,7 +205,7 @@ $(window).load(function(){
     });
     var txtList = $(".i_sel");
     var parent = txtList[txtList.length - 1];
-    var btn = $("<div style='background-color:#f17fb0;color:#fff;display:inline-block;padding:10px 25px;margin-top:15px'>开始抢票</div>");
+    var btn = $("<div style='background-color:#f17fb0;color:#fff;display:inline-block;padding:10px 25px;margin-top:15px;cursor:pointer'>开始抢票</div>");
     btn.on('click', function() {
       if (loading) return;
       loading = true;
